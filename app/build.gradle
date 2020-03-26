@@ -1,0 +1,94 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+    buildToolsVersion '28.0.2'
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 22
+        versionName '5.8'
+        multiDexEnabled true
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        applicationId 'com.cnergee.myapp.vcpl'
+    }
+
+    dexOptions {
+        javaMaxHeapSize "4g"
+        preDexLibraries = false
+    }
+
+  /*  testOptions {
+        unitTests.returnDefaultValues = true
+    }*/
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+    productFlavors {
+
+    }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+
+configurations {
+    all*.exclude group: 'com.android.support', module: 'support-v4'
+
+}
+
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation files('libs/ksoap2-android-assembly-3.0.0-RC.4-jar-with-dependencies.jar')
+    implementation files('libs/traction-ashok-v1.jar')
+    implementation files('libs/otto-1.3.5.jar')
+    implementation files('libs/commons-net-3.3.jar')
+    implementation files('libs/org.apache.http.legacy.jar')
+    implementation files('libs/ftp4j-1.7.2.jar')
+    implementation project(':floatinglabellib')
+    // compile files('libs/android-async-http-1.4.4.jar')
+    implementation project(':residemenu')
+    implementation project(':wheeldemo')
+    implementation project(':ebs')
+    //noinspection GradleCompatible
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'it.sephiroth.android.library.imagezoom:imagezoom:+'
+    implementation 'com.google.android.gms:play-services-gcm:10.2.1'
+    implementation 'com.google.firebase:firebase-messaging:10.2.1'
+    implementation 'com.android.support:cardview-v7:28.0.0'
+    implementation files('libs/PGSDK_V2.0.jar')
+    //    implementation files('libs/ebs.jar')
+    implementation files('libs/picasso-2.2.0.jar')
+    implementation 'com.android.support:multidex:1.0.0'
+    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation  group: 'com.nineoldandroids', name: 'library', version: '2.4.0'
+
+    implementation('com.google.android.ads.consent:consent-library:1.0.4') {
+        transitive = true
+        exclude group: "com.android.support"
+    }
+    subprojects {
+        project.configurations.all {
+            resolutionStrategy.eachDependency { details ->
+                if (details.requested.group == 'com.android.support'
+                        && !details.requested.name.contains('multidex') ) {
+                    details.useVersion "24.0.0"
+                }
+            }
+        }
+    }
+
+}

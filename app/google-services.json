@@ -1,0 +1,59 @@
+{
+  "project_info": {
+    "project_number": "760275026353",
+    "firebase_url": "https://sikka-broadband.firebaseio.com",
+    "project_id": "sikka-broadband",
+    "storage_bucket": "sikka-broadband.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:760275026353:android:d1a183a6c1020642",
+        "android_client_info": {
+          "package_name": "com.cnergee.myapp.vcpl"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "760275026353-s3k889ju2e6hmaf7gnbct180kujiceps.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cnergee.myapp.vcpl",
+            "certificate_hash": "7d1245322db94ebf5dd9d73b01d7e9f67ca06742"
+          }
+        },
+        {
+          "client_id": "760275026353-qctda6vmf3af163f6leepmusttrr3cqm.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "760275026353-qctda6vmf3af163f6leepmusttrr3cqm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBn6d2gm0rtdrX-D7i8QbRmwbciP4W3paI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "760275026353-qctda6vmf3af163f6leepmusttrr3cqm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

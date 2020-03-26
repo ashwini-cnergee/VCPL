@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "1079234772652",
+    "firebase_url": "https://vocal-byte-90010.firebaseio.com",
+    "project_id": "vocal-byte-90010",
+    "storage_bucket": "vocal-byte-90010.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079234772652:android:9c2892ec4561776f",
+        "android_client_info": {
+          "package_name": "com.cnergee.myapp.vcpl"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1079234772652-m8jk2hertpqob7i17jn44slpbj0eekpt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbTO-MGiFO-NOmNof3nLv1aF0gaCAk2Z0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

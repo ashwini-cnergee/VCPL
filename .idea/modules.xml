@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/VCPL.iml" filepath="$PROJECT_DIR$/VCPL.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ebs/ebs.iml" filepath="$PROJECT_DIR$/ebs/ebs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/floatinglabellib/floatinglabellib.iml" filepath="$PROJECT_DIR$/floatinglabellib/floatinglabellib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/residemenu/residemenu.iml" filepath="$PROJECT_DIR$/residemenu/residemenu.iml" />
+      <module fileurl="file://$PROJECT_DIR$/wheeldemo/wheeldemo.iml" filepath="$PROJECT_DIR$/wheeldemo/wheeldemo.iml" />
+    </modules>
+  </component>
+</project>
