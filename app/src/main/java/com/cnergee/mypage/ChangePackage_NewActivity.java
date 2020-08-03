@@ -144,7 +144,7 @@ public class ChangePackage_NewActivity extends Activity{
     public boolean compulsory_immediate=false;
     com.cnergee.mypage.obj.AdditionalAmount additionalAmount;
 
-    String PackageRate,AdditionalAmount,AdditionalAmountType, DaysFineAmount,DiscountAmount,finalcharges,FineAmount;
+    String subscriber_status,PackageRate,AdditionalAmount,AdditionalAmountType, DaysFineAmount,DiscountAmount,finalcharges,FineAmount;
     LinearLayout ll_addtional_details,llClickDetails;
     boolean is_payemnt_detail=false;
     boolean isDetailShow=false;
@@ -181,6 +181,7 @@ public class ChangePackage_NewActivity extends Activity{
         utils.setSharedPreferences(sharedPreferences);
         mainDialog= new ProgressDialog(ChangePackage_NewActivity.this);
         MemberId = utils.getMemberId();
+        subscriber_status = sharedPreferences.getString("subscriber_status","");
         //Toast.makeText(ChangePackage_NewActivity.this, MemberId, Toast.LENGTH_LONG).show();
 
         memberloginid = utils.getMemberLoginID();
@@ -1603,12 +1604,18 @@ public class ChangePackage_NewActivity extends Activity{
 //                        datafrom="";
 //                    }
 
-                    if(tv_pkg_name.getText().toString().length()>0){
+                 /*   if(tv_pkg_name.getText().toString().length()>0){
                         adjOption.setVisibility(View.VISIBLE);
                        datafrom="changepack";
+
                     }else{
-                        adjOption.setVisibility(View.GONE);
+                        adjOption.setVisibility(View.VISIBLE);
                         datafrom="";
+                    }*/
+                    if(subscriber_status.equals("Active - FUP") || subscriber_status.equals("DEACTIVE")){
+                        adjOption.setVisibility(View.GONE);
+                    }else{
+                        adjOption.setVisibility(View.VISIBLE);
                     }
                 }
 

@@ -47,6 +47,7 @@ import com.cnergee.fragments.NewConnFragment;
 import com.cnergee.mypage.SOAP.GetCurrentVersionSOAP;
 import com.cnergee.mypage.SOAP.PAckageDetailSOAP;
 import com.cnergee.mypage.SOAP.UpdatePhoneDetailSOAP;
+import com.cnergee.mypage.obj.AuthenticationMobile;
 import com.cnergee.mypage.obj.PackageDetails;
 import com.cnergee.mypage.sys.AlarmBroadcastReceiver;
 import com.cnergee.mypage.sys.ExpiryBroadcastReceiver;
@@ -71,6 +72,13 @@ import java.util.Set;
 import com.cnergee.myapp.vcpl.R;
 
 import androidx.core.app.ActivityCompat;
+
+import org.ksoap2.SoapEnvelope;
+import org.ksoap2.SoapFault;
+import org.ksoap2.serialization.PropertyInfo;
+import org.ksoap2.serialization.SoapObject;
+import org.ksoap2.serialization.SoapSerializationEnvelope;
+import org.ksoap2.transport.HttpTransportSE;
 
 
 @SuppressLint("CommitPrefEdits")
@@ -114,6 +122,7 @@ public class IONHome extends Activity implements OnClickListener {
 
 	public static Map<String, PackageDetails> mapPackageDetails;
 	private GetMemberDetailWebService getMemberDetailWebService = null;
+	private GetSubscriberStatus getSubscriberStatus = null;
 
 	boolean isLogout = false;
 	IntentFilter intentFilter = new IntentFilter();
@@ -123,7 +132,7 @@ public class IONHome extends Activity implements OnClickListener {
 
 
 	ImageView ivMenuDrawer;
-	String AppVersion = "0";
+	String subscriber_status,AppVersion = "0";
 	public static boolean is_home_running = false;
 
 	public ResideMenu resideMenu;
@@ -292,6 +301,15 @@ public class IONHome extends Activity implements OnClickListener {
 			Utils.log("Data From server IONHome ", "yes" + sharedPreferences1.getBoolean("renewal", true));
 			show_progress = true;
 			if (Utils.isOnline(IONHome.this)) {
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+					getSubscriberStatus = new GetSubscriberStatus();
+					getSubscriberStatus.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+				} else {
+					getSubscriberStatus = new GetSubscriberStatus();
+					getSubscriberStatus.execute((String) null);
+				}
+
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 					getMemberDetailWebService = new GetMemberDetailWebService();
 					getMemberDetailWebService.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -1981,4 +1999,77 @@ public class IONHome extends Activity implements OnClickListener {
 
 		}
 	}
+
+	private class GetSubscriberStatus extends AsyncTask<String, Void, String> {
+		String res;
+		@Override
+		protected void onPostExecute(String s) {
+			subscriber_status = s;
+			sharedPreferences_name = getString(R.string.shared_preferences_name);
+			SharedPreferences sharedPreferences = getApplicationContext()
+					.getSharedPreferences(sharedPreferences_name, 0);
+			// for
+			// private
+			// mode
+
+			SharedPreferences.Editor editor = sharedPreferences.edit();
+			editor.putString("subscriber_status", subscriber_status);
+			editor.commit();
+		}
+
+		@Override
+		protected String doInBackground(String... params) {
+
+
+			SoapObject request = new SoapObject(getString(R.string.WSDL_TARGET_NAMESPACE),getString(R.string.METHOD_SUBSCRIBER_STATUS));
+
+			PropertyInfo pi ;
+			pi = new PropertyInfo();
+			pi.setName(AuthenticationMobile.CliectAccessName);
+			pi.setValue(AuthenticationMobile.CliectAccessId);
+			pi.setType(String.class);
+			request.addProperty(pi);
+
+			pi = new PropertyInfo();
+			pi.setName("MemberLoginId");
+			pi.setValue(memberloginid);
+			pi.setType(String.class);
+			request.addProperty(pi);
+
+			SoapSerializationEnvelope envelope =  new SoapSerializationEnvelope(SoapEnvelope.VER11);
+			envelope.setOutputSoapObject(request);
+			envelope.dotNet = true;
+			envelope.encodingStyle = SoapSerializationEnvelope.ENC;
+			envelope.implicitTypes = true;
+
+			HttpTransportSE httpTransportSE = new HttpTransportSE(getString(R.string.SOAP_URL));
+			httpTransportSE.debug = true;
+			try {
+				httpTransportSE.call(getString(R.string.WSDL_TARGET_NAMESPACE)+getString(R.string.METHOD_SUBSCRIBER_STATUS), envelope);
+				SoapObject obj = (SoapObject) envelope.bodyIn;
+
+				if (envelope.bodyIn instanceof SoapObject) { // SoapObject = SUCCESS
+					Object response = envelope.getResponse();
+					res = response.toString();
+
+
+				} else if (envelope.bodyIn instanceof SoapFault) { // SoapFault =
+					// FAILURE
+					SoapFault soapFault = (SoapFault) envelope.bodyIn;
+					return soapFault.getMessage().toString();
+				}
+				String xml = httpTransportSE.responseDump;
+				Log.e("dump request",httpTransportSE.requestDump);
+				Log.e("dump response: ", xml);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return res;
+		}
+
+
+	}
+
+
 }
