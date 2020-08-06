@@ -13,6 +13,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -25,6 +26,7 @@ import com.avenues.lib.utility.ServiceUtility;
 import com.cnergee.mypage.caller.AfterInsertPaymentsCaller;
 import com.cnergee.mypage.caller.RenewalCaller;
 import com.cnergee.mypage.obj.AdditionalAmount;
+import com.cnergee.mypage.obj.AuthenticationMobile;
 import com.cnergee.mypage.obj.PaymentsObj;
 import com.cnergee.mypage.utils.AlertsBoxFactory;
 import com.cnergee.mypage.utils.Utils;
@@ -33,6 +35,12 @@ import com.cnergee.widgets.ProgressHUD;
 import org.apache.http.util.EncodingUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.ksoap2.SoapEnvelope;
+import org.ksoap2.SoapFault;
+import org.ksoap2.serialization.PropertyInfo;
+import org.ksoap2.serialization.SoapObject;
+import org.ksoap2.serialization.SoapSerializationEnvelope;
+import org.ksoap2.transport.HttpTransportSE;
 
 import java.net.URLEncoder;
 
@@ -55,6 +63,7 @@ public class WebView_CCAvenueActivity extends Activity {
 	public String UpdateFrom="",PackageName="";
 	String TrackId="";
 	String AuthIdCode="",bank_ref_no="";
+	String adjkey,PackageId,adjPackageRate,TotalAllotedData,TotalUsedData,AdjustedAmount;
 
 	public  boolean is_activity_running=true,is_exit_webview=false;
 	
@@ -97,13 +106,20 @@ public class WebView_CCAvenueActivity extends Activity {
 																	// mode
 		
 		utils.setSharedPreferences(sharedPreferences);
+		adjkey = sharedPreferences.getString("adjkey","");
+		adjPackageRate= sharedPreferences.getString("adjPackageRate", "");
+		AdjustedAmount= sharedPreferences.getString("AdjustedAmount", "");
+		TotalAllotedData= sharedPreferences.getString("TotalAllotedData", "");
+		TotalUsedData= sharedPreferences.getString("TotalUsedData", "");
 		vResponse=lastIntent.getStringExtra(AvenuesParams.ENC_VAL);
 		additionalAmount = (AdditionalAmount) lastIntent.getSerializableExtra("additional_amount");
+
 	
 		Changepack=lastIntent.getBooleanExtra("Changepack", true);
 		TrackId= lastIntent.getStringExtra("TrackId");
 		UpdateFrom= lastIntent.getStringExtra("UpdateFrom");
 		PackageName= lastIntent.getStringExtra("PackageName");
+		PackageId = lastIntent.getStringExtra("PackageId");
 		str_param.append(ServiceUtility.addToPostParams(AvenuesParams.ACCESS_CODE,lastIntent.getStringExtra(AvenuesParams.ACCESS_CODE)));
 		str_param=str_param.append(cca_req);
 		str_param.append(ServiceUtility.addToPostParams(AvenuesParams.LANGUAGE,"EN"));	
@@ -166,7 +182,7 @@ public class WebView_CCAvenueActivity extends Activity {
 		try {
 			Utils.log("BEFORE LOAD URL", ":"+Constants.TRANS_URL);
 
-			wvClient.postUrl(Constants.TRANS_URL,vPostParams.getBytes("UTF-8"));
+			wvClient.postUrl(Constants.TRANS_URL,vPostParams.getBytes());
 			//wvClient.postUrl(Constants.TRANS_URL, EncodingUtils.getBytes(vPostParams, "UTF-8"));
 			Utils.log("load","url"+wvClient.getUrl());
 		} catch (Exception e) {
@@ -367,7 +383,7 @@ public class WebView_CCAvenueActivity extends Activity {
 			if (rslt.trim().equalsIgnoreCase("ok")) {
 				 Utils.log("CCAVENUE RESPONSE",":"+CCAvenue_Trans_Status);
 				if (CCAvenue_Trans_Status.equals("SUCCESS")) {
-			
+
 					if (additionalAmount != null) {
 						if (additionalAmount.getAdditionalAmountType() != null) {
 							if (additionalAmount.getAdditionalAmountType()
@@ -388,7 +404,7 @@ public class WebView_CCAvenueActivity extends Activity {
 					} else {
 
 					}
-					
+
 					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 						new RenewalProcessWebService().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (String)null);
 					}
@@ -500,16 +516,24 @@ public class WebView_CCAvenueActivity extends Activity {
 
 			if (rslt.trim().equalsIgnoreCase("ok")) {
 				// finish();
-				WebView_CCAvenueActivity.this.finish();
-				
-				Intent intent = new Intent(getApplicationContext(),TransResponseCCAvenue.class);
-				intent.putExtra("transStatus",CCAvenue_Trans_Status);
-				intent.putExtra("order_id",TrackId);
-				intent.putExtra("tracking_id",AuthIdCode);
-				intent.putExtra("amount",additionalAmount.getFinalcharges());
-				intent.putExtra("order_status",CCAvenue_Trans_Status);
-				intent.putExtra("bank_ref_no",bank_ref_no);
-				startActivity(intent);
+
+				if(adjkey.equals("1")) {
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+						new RenewalAdjustmentLogCaptured().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (String) null);
+					} else {
+						new RenewalAdjustmentLogCaptured().execute();
+					}
+				}else{
+					Intent intent = new Intent(getApplicationContext(),TransResponseCCAvenue.class);
+					intent.putExtra("transStatus",CCAvenue_Trans_Status);
+					intent.putExtra("order_id",TrackId);
+					intent.putExtra("tracking_id",AuthIdCode);
+					intent.putExtra("amount",additionalAmount.getFinalcharges());
+					intent.putExtra("order_status",CCAvenue_Trans_Status);
+					intent.putExtra("bank_ref_no",bank_ref_no);
+					startActivity(intent);
+				}
+
 				
 				
 				/*
@@ -607,4 +631,156 @@ public class WebView_CCAvenueActivity extends Activity {
 	public void show_exit_dialog(){
 		
 	}
+
+	private class RenewalAdjustmentLogCaptured extends AsyncTask<String, Void, String> implements OnCancelListener {
+
+		    String res;
+			protected void onPreExecute() { }
+
+			@Override
+			protected void onCancelled() {
+			}
+
+			protected void onPostExecute(Void unused) {
+
+				if (rslt.trim().equalsIgnoreCase("ok")) {
+					// finish();
+				WebView_CCAvenueActivity.this.finish();
+					String	sharedPreferences_name = getString(R.string.shared_preferences_name);
+					SharedPreferences sharedPreferences = getApplicationContext()
+							.getSharedPreferences(sharedPreferences_name, 0);
+					SharedPreferences.Editor editor = sharedPreferences.edit();
+
+					editor.remove("adjkey");
+					editor.remove("adjPackageRate");
+					editor.remove("AdjustedAmount");
+					editor.remove("TotalAllotedData");
+					editor.remove("TotalUsedData");
+					editor.apply();
+
+
+				Intent intent = new Intent(getApplicationContext(),TransResponseCCAvenue.class);
+				intent.putExtra("transStatus",CCAvenue_Trans_Status);
+				intent.putExtra("order_id",TrackId);
+				intent.putExtra("tracking_id",AuthIdCode);
+				intent.putExtra("amount",additionalAmount.getFinalcharges());
+				intent.putExtra("order_status",CCAvenue_Trans_Status);
+				intent.putExtra("bank_ref_no",bank_ref_no);
+				startActivity(intent);
+
+				} else {
+					AlertsBoxFactory.showAlert(rslt, WebView_CCAvenueActivity.this);
+					return;
+				}
+			}
+
+			@Override
+			protected String doInBackground(String... params) {
+				try {
+
+
+					SoapObject request = new SoapObject(getString(R.string.WSDL_TARGET_NAMESPACE), getString(R.string.METHOD_AdjustmentLogCaptured));
+
+					PropertyInfo pi;
+					pi = new PropertyInfo();
+					pi.setName(AuthenticationMobile.CliectAccessName);
+					pi.setValue(AuthenticationMobile.CliectAccessId);
+					pi.setType(String.class);
+					request.addProperty(pi);
+
+					pi = new PropertyInfo();
+					pi.setName("MemberId");
+					pi.setValue(utils.MemberId);
+					pi.setType(String.class);
+					request.addProperty(pi);
+
+					pi = new PropertyInfo();
+					pi.setName("PackageId");
+					pi.setValue(PackageId);
+					pi.setType(String.class);
+					request.addProperty(pi);
+
+					pi = new PropertyInfo();
+					pi.setName("TrackId");
+					pi.setValue(TrackId);
+					pi.setType(String.class);
+					request.addProperty(pi);
+
+					pi = new PropertyInfo();
+					pi.setName("PackageRate");
+					pi.setValue(adjPackageRate);
+					pi.setType(String.class);
+					request.addProperty(pi);
+
+					pi = new PropertyInfo();
+					pi.setName("AdjustedAmount");
+					pi.setValue(AdjustedAmount);
+					pi.setType(String.class);
+					request.addProperty(pi);
+
+				    pi = new PropertyInfo();
+					pi.setName("TotalAllotedData");
+					pi.setValue(TotalAllotedData);
+					pi.setType(String.class);
+					request.addProperty(pi);
+
+					pi = new PropertyInfo();
+					pi.setName("TotalUsedData");
+					pi.setValue(TotalUsedData);
+					pi.setType(String.class);
+					request.addProperty(pi);
+
+
+
+
+					SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER11);
+					envelope.setOutputSoapObject(request);
+					envelope.dotNet = true;
+					envelope.encodingStyle = SoapSerializationEnvelope.ENC;
+					envelope.implicitTypes = true;
+
+					HttpTransportSE httpTransportSE = new HttpTransportSE(getString(R.string.SOAP_URL));
+					httpTransportSE.debug = true;
+					try {
+						httpTransportSE.call(getString(R.string.WSDL_TARGET_NAMESPACE) + getString(R.string.METHOD_AdjustmentLogCaptured), envelope);
+						SoapObject obj = (SoapObject) envelope.bodyIn;
+
+						if (envelope.bodyIn instanceof SoapObject) { // SoapObject = SUCCESS
+							Object response = envelope.getResponse();
+							res = response.toString();
+
+
+						} else if (envelope.bodyIn instanceof SoapFault) { // SoapFault =
+							// FAILURE
+							SoapFault soapFault = (SoapFault) envelope.bodyIn;
+							return soapFault.getMessage().toString();
+						}
+						String xml = httpTransportSE.responseDump;
+						Log.e("dump request", httpTransportSE.requestDump);
+						Log.e("dump response: ", xml);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return res;
+			}
+
+			/*
+			 * @Override public void onClick(View v) { // TODO Auto-generated method
+			 * stub
+			 *
+			 * }
+			 */
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				// TODO Auto-generated method stub
+				//progressDialog.dismiss();
+			}
+		}
+
 }

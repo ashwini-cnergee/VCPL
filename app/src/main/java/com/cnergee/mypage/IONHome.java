@@ -341,6 +341,14 @@ public class IONHome extends Activity implements OnClickListener {
 					Utils.getRegId(IONHome.this);
 				}
 			}
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+				getSubscriberStatus = new GetSubscriberStatus();
+				getSubscriberStatus.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+			} else {
+				getSubscriberStatus = new GetSubscriberStatus();
+				getSubscriberStatus.execute((String) null);
+			}
 
 
 			// *********************for expiry service****************

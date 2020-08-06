@@ -119,7 +119,7 @@ public class ChangePackage_NewActivity extends Activity{
     double OldPlanRate,NewPlanRate;
     String PackageValidity,ServcieTax;
     ProgressDialog mainDialog;
-    String PackageId="";
+    String PackageId;
     boolean is_cheque_bounced=false;
 	/*String AreaCode = "21";
 	String AreaCodeFilter ="1";*/
@@ -151,8 +151,9 @@ public class ChangePackage_NewActivity extends Activity{
     TextView TextView02,final_price_label;
     TextView package_rate;
     LinearLayout ll_package_rate;
-    String datafrom="changepack";
+    String adj_key,datafrom="changepack";
     Dialog pg_dialog;
+    String adjPackageRate,AdjustedAmount,TotalAllotedData,TotalUsedData;
     /*@Override
      public void onDestroy() {
             super.onDestroy();
@@ -187,6 +188,7 @@ public class ChangePackage_NewActivity extends Activity{
         memberloginid = utils.getMemberLoginID();
         check_intent=getIntent().getBooleanExtra("check_intent", false);
         packageList= (PackageList) getIntent().getSerializableExtra("Selected_Pkg");
+        PackageId = packageList.getPackageId();
         btnhome = (ImageView)findViewById(R.id.btnhome);
         btnprofile = (ImageView)findViewById(R.id.btnprofile);
         btnnotification = (ImageView)findViewById(R.id.btnnotification);
@@ -509,6 +511,7 @@ public class ChangePackage_NewActivity extends Activity{
         price.setText(Double.toString(Double.parseDouble(String.valueOf(packageList.getPackageRate()))));
         validity.setText(packageList.getPackagevalidity());
         servicetax.setText(packageList.getServiceTax());
+
         final_price=price.getText().toString();
 
         //new GetFinalDeductedAmtAsyncTask().execute();
@@ -583,6 +586,7 @@ public class ChangePackage_NewActivity extends Activity{
                 validity.setText(PackageValidity);
                 servicetax.setText(ServcieTax);
                 new GetFinalDeductedAmtAsyncTask().execute();
+                 adj_key= "0";
                 //new GetFinalPriceAsynctask().execute();
                 // new UpdatePrice().execute();
 
@@ -593,6 +597,8 @@ public class ChangePackage_NewActivity extends Activity{
                 adjustmentWebService = new AdjustmentWebService();
                 adjustmentWebService.execute((String)null);
 
+                adj_key= "1";
+
                 //new GetFinalPriceAsynctask().execute();
             }else if(renewImmediate.isChecked()){
                 updateFrom = "I";
@@ -602,6 +608,7 @@ public class ChangePackage_NewActivity extends Activity{
                 validity.setText(PackageValidity);
                 servicetax.setText(ServcieTax);
                 new GetFinalDeductedAmtAsyncTask().execute();
+                adj_key = "0";
             }
         }
     };
@@ -879,7 +886,27 @@ public class ChangePackage_NewActivity extends Activity{
 
             if (rslt.trim().equalsIgnoreCase("ok")) {
                 try {
-                    NewPlanRate = Double.parseDouble(adjStringVal);
+                    String adjres_array [] = adjStringVal.split("#");
+                    String[] split1 = adjres_array[0].split("=");
+                     adjPackageRate = split1[1];
+                    String[] split2 = adjres_array[1].split("=");
+                     AdjustedAmount = split2[1];
+                    String[] split3 = adjres_array[2].split("=");
+                    if(split3.length>1) {
+
+                         TotalAllotedData = split3[1];
+                    }else{
+                         TotalAllotedData = "";
+                    }
+                    String[] split4 = adjres_array[3].split("=");
+                    if(split4.length>1) {
+                         TotalUsedData = split4[1];
+                    }else {
+                        TotalUsedData = "";
+                    }
+
+
+                    NewPlanRate = Double.parseDouble(AdjustedAmount);
                     if(NewPlanRate!=0){
                         if(additionalAmount!=null){
                             if(Double.valueOf(additionalAmount.getAdditionalAmount())>0){
@@ -893,6 +920,16 @@ public class ChangePackage_NewActivity extends Activity{
                             validity.setText(PackageValidity);
                             servicetax.setText(ServcieTax);
                             isAdjOptionClick = true;
+                            sharedPreferences_name = getString(R.string.shared_preferences_name);
+                            SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(sharedPreferences_name, 0);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                            editor.putString("adjkey",adj_key);
+                            editor.putString("adjPackageRate", adjPackageRate);
+                            editor.putString("AdjustedAmount", AdjustedAmount);
+                            editor.putString("TotalAllotedData", TotalAllotedData);
+                            editor.putString("TotalUsedData", TotalUsedData);
+                            editor.commit();
                         }
                         else{
                             RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioPayMode);
@@ -916,7 +953,9 @@ public class ChangePackage_NewActivity extends Activity{
                     if(adjStringVal.equalsIgnoreCase("anyType{}")){
                         AlertsBoxFactory.showAlert("Conversion is not possible.", context);
                     }else{
-                        AlertsBoxFactory.showAlert(adjStringVal, context);
+                        if(adjStringVal.contains("#")){}else {
+                            AlertsBoxFactory.showAlert(adjStringVal, context);
+                        }
                     }
                 }
 
@@ -984,7 +1023,7 @@ public class ChangePackage_NewActivity extends Activity{
                 NewPlanRate = Double.parseDouble(String.valueOf(packageList.getPackageRate()));
                 PackageValidity = (packageList.getPackagevalidity());
                 ServcieTax = (packageList.getServiceTax());
-                PackageId= (packageList.getPackageId());
+
                 //Utils.log("PackageId", ":"+packageList.getPackageId());
                 Utils.log("PackageName", ":"+packageList.getPlanName());
 
@@ -1000,7 +1039,7 @@ public class ChangePackage_NewActivity extends Activity{
             NewPlanRate = 0;
             PackageValidity = "0";
             ServcieTax = "0";
-            PackageId="";
+            PackageId=PackageId;
         }
 
     }
@@ -1900,6 +1939,7 @@ public class ChangePackage_NewActivity extends Activity{
             i.putExtra("datafrom", datafrom);
             i.putExtra("ClassName", ChangePackage_NewActivity.this.getClass().getSimpleName());
             i.putExtra("addtional_amount", additionalAmount);
+            i.putExtra("packageid",PackageId);
             startActivity(i);
             BaseApplication.getEventBus().post(new FinishEvent("RenewPackage"));
         }
@@ -1928,6 +1968,7 @@ public class ChangePackage_NewActivity extends Activity{
                 i.putExtra("datafrom", datafrom);
                 i.putExtra("ClassName", ChangePackage_NewActivity.this.getClass().getSimpleName());
                 i.putExtra("addtional_amount", additionalAmount);
+                i.putExtra("PackageId",PackageId);
 
                 startActivity(i);
                 BaseApplication.getEventBus().post(new FinishEvent("RenewPackage"));

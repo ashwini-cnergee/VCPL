@@ -83,7 +83,7 @@ public class MakeMyPayment_EBS extends BaseActivity implements OnCancelListener{
 	public static String adjTrackval = "";
 	public static String responseMsg = "";
 	public static Map<String, MemberDetailsObj> mapMemberDetails;
-	private String customername,Email_id;
+	private String customername,Email_id,PackageId;
 	
 	AdditionalAmount additionalAmount;
 	MemberDetailsObj memberDetails;
@@ -299,7 +299,7 @@ public class MakeMyPayment_EBS extends BaseActivity implements OnCancelListener{
 		discount = bundle.getString("discount");
 		ClassName = bundle.getString("ClassName");
 		additionalAmount = (AdditionalAmount) bundle.getSerializable("addtional_amount");
-		
+		PackageId = bundle.getString("packageid");
 		if (bundle.getString("datafrom").equalsIgnoreCase("changepack")) {
 			Changepack = true;
 			tvDiscountLabel.setVisibility(View.GONE);
