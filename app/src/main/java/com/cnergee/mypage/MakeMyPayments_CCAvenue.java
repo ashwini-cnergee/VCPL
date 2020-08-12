@@ -145,7 +145,7 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 	String PackageId,discount = "";
 	TableLayout tableRowDiscount;
 	TextView tvDiscountLabel;
-	String ClassName = "",isRenew="";
+	String ClassName = "",isRenew;
 	AdditionalAmount additionalAmount;
 	public boolean is_payemnt_detail = false;
 	TextView tvClickDetails;
@@ -1190,6 +1190,7 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 						.toString());
 				paymentsObj.setServiceTax(ServiceTax);
 				paymentsObj.setDiscount_Amount(additionalAmount.getDiscountAmount());
+				paymentsObj.setRenewaltype(UpdateFrom);
 				if(Utils.pg_sms_request){
 					if(Utils.pg_sms_uniqueid.length()>0){
 						paymentsObj.setPg_sms_unique_id(Utils.pg_sms_uniqueid);
@@ -1278,6 +1279,7 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 				paymentsObj.setServiceTax(ServiceTax);
 				paymentsObj.setDiscount_Amount(additionalAmount.getDiscountAmount());
 				paymentsObj.setBankcode("CA");
+				paymentsObj.setRenewaltype(UpdateFrom);
 
 
 				if(Utils.pg_sms_request){

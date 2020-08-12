@@ -111,6 +111,14 @@ public class InsertBeforeWithTrackSOAP {
         pi.setType(String.class);
         request.addProperty(pi);
 
+        pi = new PropertyInfo();
+        pi.setName("RenewalType");
+        pi.setValue(getPaymentdata().getRenewaltype());
+        pi.setType(String.class);
+        request.addProperty(pi);
+
+
+
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(
                 SoapEnvelope.VER11);
         envelope.dotNet = true;

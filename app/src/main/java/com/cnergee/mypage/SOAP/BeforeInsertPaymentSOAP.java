@@ -57,10 +57,7 @@ public class BeforeInsertPaymentSOAP {
 		Log.i(" SOAP_ACTION ", WSDL_TARGET_NAMESPACE + METHOD_NAME);
 		Log.i(" searchTxt ", searchTxt);*/
 		//Log.i("#####################", "");
-		
-		
-		
-		
+
 		PropertyInfo pi = new PropertyInfo();
 		pi.setName("MemberId");
 		pi.setValue(getPaymentdata().getMemberId());
@@ -104,6 +101,13 @@ public class BeforeInsertPaymentSOAP {
 		pi.setValue(getPaymentdata().getPg_sms_unique_id());
 		pi.setType(String.class);
 		request.addProperty(pi);
+
+		pi = new PropertyInfo();
+		pi.setName("RenewalType");
+		pi.setValue(getPaymentdata().getRenewaltype());
+		pi.setType(String.class);
+		request.addProperty(pi);
+
 
 		pi = new PropertyInfo();
 		pi.setName(AuthenticationMobile.CliectAccessName);

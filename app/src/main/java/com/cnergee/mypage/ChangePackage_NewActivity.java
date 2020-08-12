@@ -596,7 +596,6 @@ public class ChangePackage_NewActivity extends Activity{
                 AlertsBoxFactory.showAlert("This Feature will <b>Discontinue</b> The Current Package and New Package will be Applied from Today.<br/> Are you Sure? ", ChangePackage_NewActivity.this);
                 adjustmentWebService = new AdjustmentWebService();
                 adjustmentWebService.execute((String)null);
-
                 adj_key= "1";
 
                 //new GetFinalPriceAsynctask().execute();

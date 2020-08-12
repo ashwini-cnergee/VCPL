@@ -30,6 +30,7 @@ public class PaymentsObj {
 	private String pg_sms_unique_id;
 	private String is_renew;
 	private String bankcode;
+	private String Renewaltype;
 
 	public long getMemberId() {
 		return MemberId;
@@ -190,5 +191,13 @@ public class PaymentsObj {
 
 	public void setBankcode(String bankcode) {
 		this.bankcode = bankcode;
+	}
+
+	public String getRenewaltype() {
+		return Renewaltype;
+	}
+
+	public void setRenewaltype(String renewaltype) {
+		Renewaltype = renewaltype;
 	}
 }
