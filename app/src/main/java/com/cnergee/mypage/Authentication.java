@@ -218,7 +218,7 @@ public class Authentication extends Activity implements OnCancelListener{
 		@Override
 		protected Void doInBackground(String... params) {
 			try {
-				
+				Utils.areaRestrict = 1;
 				AuthenticationCaller authenticationcaller = new AuthenticationCaller(
 						getApplicationContext().getResources().getString(
 								R.string.WSDL_TARGET_NAMESPACE),

@@ -72,7 +72,9 @@ public class Utils extends Activity {
 	public static boolean pg_sms_request=false;
 	public static String IS_RENEWAL="is_renewal";
     public static boolean is_payU=true;
-
+	public static int areaRestrict  = 0;
+	public static String PhoneNum  = "PhoneNum";
+	public static String AreaRestricted  = "AreaRestrict";
 
 	public static String pg_sms_uniqueid="";
 	public static ResideMenuItem itemProfile;

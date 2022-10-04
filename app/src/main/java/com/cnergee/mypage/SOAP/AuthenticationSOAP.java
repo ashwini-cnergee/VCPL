@@ -97,7 +97,8 @@ public class AuthenticationSOAP {
 		
 		
 		Object response = envelope.getResponse();
-		
+		Utils.log("Request Authentication",""+androidHttpTransport.requestDump);
+
 		Utils.log("Response Authentication",""+response);
 		
 		/*JSONArray arr = new JSONArray(response.toString());

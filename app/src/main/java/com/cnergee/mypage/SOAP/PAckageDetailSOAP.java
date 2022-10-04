@@ -127,6 +127,8 @@ public class PAckageDetailSOAP {
 
 		packagedetails.setPackageName(response.getPropertyAsString("CurrentPlan")
 				.toString());
+		packagedetails.setPhoneNum(response.getPropertyAsString("PrimaryMobileNo")
+				.toString());
 		packagedetails.setAmount(response.getPropertyAsString("PlanRate").toString());
 
 		packagedetails.setPackageValidity(response.getPropertyAsString("PackageValidity")

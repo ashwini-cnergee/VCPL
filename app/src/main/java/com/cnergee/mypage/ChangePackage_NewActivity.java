@@ -47,6 +47,7 @@ import com.cnergee.mypage.SOAP.AreaWiseSettingSOAP;
 import com.cnergee.mypage.SOAP.GetAdditionalAmountSOAP;
 import com.cnergee.mypage.SOAP.GetFinalPackageSOAP;
 import com.cnergee.mypage.caller.AdjustmentCaller;
+import com.cnergee.mypage.caller.AuthenticationCaller;
 import com.cnergee.mypage.caller.PackgeCaller;
 import com.cnergee.mypage.caller.SMSAuthenticationCaller;
 import com.cnergee.mypage.obj.AdditionalAmount;
@@ -145,7 +146,7 @@ public class ChangePackage_NewActivity extends Activity{
     public boolean compulsory_immediate=false;
     com.cnergee.mypage.obj.AdditionalAmount additionalAmount;
 
-    String subscriber_status,PackageRate,AdditionalAmount,AdditionalAmountType, DaysFineAmount,DiscountAmount,finalcharges,FineAmount;
+    String subscriber_status,PackageRate,AdditionalAmount,AdditionalAmountType, DaysFineAmount,DiscountAmount,finalcharges,FineAmount,sharedPreferences_renewal;
     LinearLayout ll_addtional_details,llClickDetails;
     boolean is_payemnt_detail=false;
     boolean isDetailShow=false;
@@ -154,7 +155,8 @@ public class ChangePackage_NewActivity extends Activity{
     LinearLayout ll_package_rate;
     String adj_key,datafrom="changepack";
     Dialog pg_dialog;
-    String adjPackageRate,AdjustedAmount,TotalAllotedData,TotalUsedData;
+    SharedPreferences sharedPreferences1;
+    String adjPackageRate,AdjustedAmount,TotalAllotedData,TotalUsedData,str_MobileNum;
     /*@Override
      public void onDestroy() {
             super.onDestroy();
@@ -181,6 +183,14 @@ public class ChangePackage_NewActivity extends Activity{
                 .getSharedPreferences(sharedPreferences_name, 0); // 0 - for private mode
 
         utils.setSharedPreferences(sharedPreferences);
+
+        sharedPreferences_renewal = getString(R.string.shared_preferences_renewal);
+        sharedPreferences1 = getApplicationContext()
+                .getSharedPreferences(
+                        sharedPreferences_renewal, 0); // 0 -
+
+        str_MobileNum = sharedPreferences1.getString(Utils.PhoneNum,"");
+
         mainDialog= new ProgressDialog(ChangePackage_NewActivity.this);
         MemberId = utils.getMemberId();
         subscriber_status = sharedPreferences.getString("subscriber_status","");
@@ -390,6 +400,8 @@ public class ChangePackage_NewActivity extends Activity{
             }
         });*/
 
+
+
         btnpay = (LinearLayout)findViewById(R.id.btnpay);
         btnpay.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -413,6 +425,7 @@ public class ChangePackage_NewActivity extends Activity{
                                 Toast.LENGTH_LONG).show();
                     }
                     else{
+                        Log.e("Price",":"+Double.valueOf(price.getText().toString()));
                         if(Double.valueOf(price.getText().toString())>0){
                             if(is_cheque_bounced){
                                 AlertsBoxFactory.showAlert(getString(R.string.cheque_bounce_message), ChangePackage_NewActivity.this);
@@ -536,6 +549,13 @@ public class ChangePackage_NewActivity extends Activity{
             price.setText("0");
             validity.setText("0");
             servicetax.setText("0");
+        }
+        if(utils.isOnline(ChangePackage_NewActivity.this)){
+            ValidUserWebService  validUserWebService = new ValidUserWebService();
+            validUserWebService.execute((String) null);
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Please connect to internet and try again!!", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -1096,175 +1116,101 @@ public class ChangePackage_NewActivity extends Activity{
         is_activity_running=true;
     }
 
-//*******************************Check Valid User Web Service*********starts here**************************
-
-    protected class ValidUserWebService extends AsyncTask<String, Void, Void> implements OnCancelListener  {
-
-
-        ProgressHUD mProgressHUD;
-
+    protected class ValidUserWebService extends AsyncTask<String, Void, Void> implements OnCancelListener {
 
         // final AlertDialog alert =new
         // AlertDialog.Builder(Login.this).create();
 
-        //private ProgressDialog Dialog = new ProgressDialog(SMSAuthenticationActivity.this);
-
+        //private ProgressDialog Dialog = new ProgressDialog(Authentication.this);
+        ProgressHUD mProgressHUD;
         protected void onPreExecute() {
+            //Dialog.setMessage(getString(R.string.app_please_wait_label));
+            if(mProgressHUD!=null)
+                mProgressHUD = ProgressHUD.show(ChangePackage_NewActivity.this,getString(R.string.app_please_wait_label), true,true,this);
+            //	mainDialog.setCancelable(false);
+            //	mainDialog.show();
 
-            if(is_activity_running)
-                mProgressHUD = ProgressHUD.show(ChangePackage_NewActivity.this,getString(R.string.app_please_wait_label), true,true, this);
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
-                Utils.log("Valid User","Progress Not Showing");
-            }
-            else{
-
-            }
+            //fontTypeface.dialogFontOverride(context,Dialog);
 
         }
 
-        @SuppressLint("CommitPrefEdits")
         protected void onPostExecute(Void unused) {
-            if(is_activity_running)
+            //DiaUtils.dismiss();
+            if(mProgressHUD!=null)
                 mProgressHUD.dismiss();
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+//            btnsubmit.setClickable(true);
+//            validUserWebService = null;
 
-            }
-            else{
-
-
-            }
             if (rslt.trim().equalsIgnoreCase("ok")) {
-
+                //isVaildUser = true;
+                Log.e("isRestricted","--"+isVaildUser);
                 if (isVaildUser) {
-                    //new PackageListWebService().execute();
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
-                        new SettingResultAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR );
-                    }
-                    else{
-                        new SettingResultAsyncTask().execute();
-                    }
+
+					/*SharedPreferences sharedPreferences = getApplicationContext()
+							.getSharedPreferences(sharedPreferences_name, 0); // 0 - for
+																	// private
+																	// mode
+					//utils.clearSharedPreferences(sharedPreferences);
+					SharedPreferences.Editor editor = sharedPreferences.edit();
+					editor.putString("MobileNoPrimary", txtmobilenumber.getText().toString());
+					editor.putString("MemberLoginID", txtuserid.getText().toString());*/
+                    //editor.commit();
+
+                    //isFinish = true;
+
+                    //finish();
+
+					/*Intent intent = new Intent(LoginActivity.this,
+							HomeActivity.class);*/
+				/*	Intent intent = new Intent(Authentication.this,
+							Confirmation.class);
+
+					intent.putExtra("mobilenumber",txtmobilenumber.getText().toString());
+					intent.putExtra("userid",txtuserid.getText().toString());*/
+
+                    //bundle.putString("username");
+                    //intent.putExtra("com.cnergee.service.home.screen.INTENT", bundle);
+                    //startActivity(intent);
+                    //Authentication.this.finish();
+                    //Utils.log("GetMemberDetailWebService","called");
+
                 } else {
-                    //mProgressHUD.dismiss();
-                    SharedPreferences sharedPreferences1 = getApplicationContext()
-                            .getSharedPreferences(sharedPreferences_name, 0); // 0
-                    // -
-
-                    SharedPreferences.Editor edit1 = sharedPreferences1.edit();
-                    edit1.clear();
-
-                    SharedPreferences sharedPreferences2 = getApplicationContext()
-                            .getSharedPreferences(
-                                    getString(R.string.shared_preferences_renewal),
-                                    0); // 0 - for private mode
-                    SharedPreferences.Editor edit2 = sharedPreferences2.edit();
-                    edit2.clear();
-
-                    SharedPreferences sharedPreferences3 = getApplicationContext()
-                            .getSharedPreferences(
-                                    getString(R.string.shared_preferences_notification_list),
-                                    0); // 0 - for private mode
-                    SharedPreferences.Editor edit3 = sharedPreferences3.edit();
-                    edit3.clear();
-
-                    SharedPreferences sharedPreferences4 = getApplicationContext()
-                            .getSharedPreferences(
-                                    getString(R.string.shared_preferences_payment_history),
-                                    0); // 0 - for private mode
-                    SharedPreferences.Editor edit4 = sharedPreferences4.edit();
-                    edit4.clear();
-
-                    SharedPreferences sharedPreferences5 = getApplicationContext()
-                            .getSharedPreferences(
-                                    getString(R.string.shared_preferences_profile),
-                                    0); // 0 - for private mode
-                    SharedPreferences.Editor edit5 = sharedPreferences5.edit();
-                    edit5.clear();
-                    //	Utils.log("Data","cleared");
-                    sharedPreferences1.edit().clear().commit();
-
-                    final Dialog dialog = new Dialog(context);
-                    dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                    //tell the Dialog to use the dialog.xml as it's layout description
-                    dialog.setContentView(R.layout.dialog_box);
-                    int width = 0;
-                    int height =0;
-
-
-                    Point size = new Point();
-                    WindowManager w =getWindowManager();
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-                        w.getDefaultDisplay().getSize(size);
-                        width = size.x;
-                        height = size.y;
-                    } else {
-                        Display d = w.getDefaultDisplay();
-                        width = d.getWidth();
-                        height   = d.getHeight();;
-                    }
-
-
-
-                    TextView	dtv = (TextView) dialog.findViewById(R.id.tv1);
-
-                    TextView txt = (TextView) dialog.findViewById(R.id.tv);
-
-                    txt.setText(Html.fromHtml("You are allowed to use app only on one device"));
-                    dtv.setText(Html.fromHtml("Alert"));
-                    Button dialogButton = (Button) dialog.findViewById(R.id.btnSubmit);
-
-
-                    dialogButton.setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            ChangePackage_NewActivity.this.finish();
-                            Intent intent = new Intent(
-                                    ChangePackage_NewActivity.this,
-                                    LoginFragmentActivity.class);
-                            intent.putExtra("from", "2");
-                            startActivity(intent);
-                            dialog.dismiss();
-                        }
-                    });
-
-                    dialog.show();
-                    //(width/2)+((width/2)/2)
-                    //dialog.getWindow().setLayout((width/2)+((width/2)/2), height/2);
-                    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                    dialog.getWindow().setLayout((width/2)+(width/2)/2, LayoutParams.WRAP_CONTENT);
-
+                    //Utils.log("GetMemberDetailWebService"," not called");
+                    //mainDiaUtils.dismiss();
+                    Toast.makeText(ChangePackage_NewActivity.this,getString(R.string.login_invalid),
+                            Toast.LENGTH_LONG).show();
+                    return;
                 }
             } else {
-                //mProgressHUD.dismiss();
+                if(mProgressHUD!=null)
+                    mProgressHUD.dismiss();
+                //mainDiaUtils.dismiss();
+                AlertsBoxFactory.showAlert(rslt,context );
             }
-
+            //isFinish=true;
         }
-
-
 
         @Override
         protected Void doInBackground(String... params) {
             try {
-
-                //	Log.i("START",">>>>>>>START<<<<<<<<");
-                SMSAuthenticationCaller smsCaller = new SMSAuthenticationCaller(
+                Utils.areaRestrict = 2;
+                AuthenticationCaller authenticationcaller = new AuthenticationCaller(
                         getApplicationContext().getResources().getString(
                                 R.string.WSDL_TARGET_NAMESPACE),
                         getApplicationContext().getResources().getString(
                                 R.string.SOAP_URL), getApplicationContext()
                         .getResources().getString(
-                                R.string.METHOD_GET_SMS_AUTHENTICATION)
+                                R.string.METHOD_GET_LOGIN_BY_MEMBERID)
                 );
-                smsCaller.PhoneUniqueId=Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-                smsCaller.MemberId = MemberId;
-                smsCaller.OneTimePwd=otp_password;
-                //smsCaller.setAllData(true);
-                smsCaller.setCallData("newchange");
-                smsCaller.join();
-                smsCaller.start();
+                authenticationcaller.mobilenumber = str_MobileNum;
+                authenticationcaller.userid = memberloginid;
+
+                authenticationcaller.join();
+                authenticationcaller.start();
+                //	Utils.log("valid","user");
                 rslt = "START";
 
-                while (rslt.equalsIgnoreCase("START")){
+                while (rslt == "START") {
                     try {
                         Thread.sleep(10);
                     } catch (Exception ex) {
@@ -1272,29 +1218,228 @@ public class ChangePackage_NewActivity extends Activity{
                 }
 
             } catch (Exception e) {
-
+                /*AlertsBoxFactory.showErrorAlert(e.toString(),context );*/
             }
             return null;
         }
         @Override
         protected void onCancelled() {
-            //mProgressHUD.dismiss();
-            mProgressHUD.dismiss();
+            if(mProgressHUD!=null)
+                mProgressHUD.dismiss();
+            //DiaUtils.dismiss();
+//            btnsubmit.setClickable(true);
+//            validUserWebService = null;
         }
 
+        /* (non-Javadoc)
+         * @see android.content.DialogInterface.OnCancelListener#onCancel(android.content.DialogInterface)
+         */
         @Override
         public void onCancel(DialogInterface dialog) {
             // TODO Auto-generated method stub
 
         }
-
-/*		@Override
-		public void onCancel(DialogInterface dialog) {
-			// TODO Auto-generated method stub
-
-		}*/
-
     }
+
+//*******************************Check Valid User Web Service*********starts here**************************
+
+//    protected class ValidUserWebService extends AsyncTask<String, Void, Void> implements OnCancelListener  {
+//
+//
+//        ProgressHUD mProgressHUD;
+//
+//
+//        // final AlertDialog alert =new
+//        // AlertDialog.Builder(Login.this).create();
+//
+//        //private ProgressDialog Dialog = new ProgressDialog(SMSAuthenticationActivity.this);
+//
+//        protected void onPreExecute() {
+//
+//            if(is_activity_running)
+//                mProgressHUD = ProgressHUD.show(ChangePackage_NewActivity.this,getString(R.string.app_please_wait_label), true,true, this);
+//            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+//                Utils.log("Valid User","Progress Not Showing");
+//            }
+//            else{
+//
+//            }
+//
+//        }
+//
+//        @SuppressLint("CommitPrefEdits")
+//        protected void onPostExecute(Void unused) {
+//            if(is_activity_running)
+//                mProgressHUD.dismiss();
+//            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+//
+//            }
+//            else{
+//
+//
+//            }
+//            if (rslt.trim().equalsIgnoreCase("ok")) {
+//
+//                if (isVaildUser) {
+//                    //new PackageListWebService().execute();
+//                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+//                        new SettingResultAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR );
+//                    }
+//                    else{
+//                        new SettingResultAsyncTask().execute();
+//                    }
+//                } else {
+//                    //mProgressHUD.dismiss();
+//                    SharedPreferences sharedPreferences1 = getApplicationContext()
+//                            .getSharedPreferences(sharedPreferences_name, 0); // 0
+//                    // -
+//
+//                    SharedPreferences.Editor edit1 = sharedPreferences1.edit();
+//                    edit1.clear();
+//
+//                    SharedPreferences sharedPreferences2 = getApplicationContext()
+//                            .getSharedPreferences(
+//                                    getString(R.string.shared_preferences_renewal),
+//                                    0); // 0 - for private mode
+//                    SharedPreferences.Editor edit2 = sharedPreferences2.edit();
+//                    edit2.clear();
+//
+//                    SharedPreferences sharedPreferences3 = getApplicationContext()
+//                            .getSharedPreferences(
+//                                    getString(R.string.shared_preferences_notification_list),
+//                                    0); // 0 - for private mode
+//                    SharedPreferences.Editor edit3 = sharedPreferences3.edit();
+//                    edit3.clear();
+//
+//                    SharedPreferences sharedPreferences4 = getApplicationContext()
+//                            .getSharedPreferences(
+//                                    getString(R.string.shared_preferences_payment_history),
+//                                    0); // 0 - for private mode
+//                    SharedPreferences.Editor edit4 = sharedPreferences4.edit();
+//                    edit4.clear();
+//
+//                    SharedPreferences sharedPreferences5 = getApplicationContext()
+//                            .getSharedPreferences(
+//                                    getString(R.string.shared_preferences_profile),
+//                                    0); // 0 - for private mode
+//                    SharedPreferences.Editor edit5 = sharedPreferences5.edit();
+//                    edit5.clear();
+//                    //	Utils.log("Data","cleared");
+//                    sharedPreferences1.edit().clear().commit();
+//
+//                    final Dialog dialog = new Dialog(context);
+//                    dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+//                    //tell the Dialog to use the dialog.xml as it's layout description
+//                    dialog.setContentView(R.layout.dialog_box);
+//                    int width = 0;
+//                    int height =0;
+//
+//
+//                    Point size = new Point();
+//                    WindowManager w =getWindowManager();
+//
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+//                        w.getDefaultDisplay().getSize(size);
+//                        width = size.x;
+//                        height = size.y;
+//                    } else {
+//                        Display d = w.getDefaultDisplay();
+//                        width = d.getWidth();
+//                        height   = d.getHeight();;
+//                    }
+//
+//
+//
+//                    TextView	dtv = (TextView) dialog.findViewById(R.id.tv1);
+//
+//                    TextView txt = (TextView) dialog.findViewById(R.id.tv);
+//
+//                    txt.setText(Html.fromHtml("You are allowed to use app only on one device"));
+//                    dtv.setText(Html.fromHtml("Alert"));
+//                    Button dialogButton = (Button) dialog.findViewById(R.id.btnSubmit);
+//
+//
+//                    dialogButton.setOnClickListener(new OnClickListener() {
+//                        @Override
+//                        public void onClick(View v) {
+//                            ChangePackage_NewActivity.this.finish();
+//                            Intent intent = new Intent(
+//                                    ChangePackage_NewActivity.this,
+//                                    LoginFragmentActivity.class);
+//                            intent.putExtra("from", "2");
+//                            startActivity(intent);
+//                            dialog.dismiss();
+//                        }
+//                    });
+//
+//                    dialog.show();
+//                    //(width/2)+((width/2)/2)
+//                    //dialog.getWindow().setLayout((width/2)+((width/2)/2), height/2);
+//                    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+//                    dialog.getWindow().setLayout((width/2)+(width/2)/2, LayoutParams.WRAP_CONTENT);
+//
+//                }
+//            } else {
+//                //mProgressHUD.dismiss();
+//            }
+//
+//        }
+//
+//
+//
+//        @Override
+//        protected Void doInBackground(String... params) {
+//            try {
+//
+//                //	Log.i("START",">>>>>>>START<<<<<<<<");
+//                SMSAuthenticationCaller smsCaller = new SMSAuthenticationCaller(
+//                        getApplicationContext().getResources().getString(
+//                                R.string.WSDL_TARGET_NAMESPACE),
+//                        getApplicationContext().getResources().getString(
+//                                R.string.SOAP_URL), getApplicationContext()
+//                        .getResources().getString(
+//                                R.string.METHOD_GET_SMS_AUTHENTICATION)
+//                );
+//                smsCaller.PhoneUniqueId=Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+//                smsCaller.MemberId = MemberId;
+//                smsCaller.OneTimePwd=otp_password;
+//                //smsCaller.setAllData(true);
+//                smsCaller.setCallData("newchange");
+//                smsCaller.join();
+//                smsCaller.start();
+//                rslt = "START";
+//
+//                while (rslt.equalsIgnoreCase("START")){
+//                    try {
+//                        Thread.sleep(10);
+//                    } catch (Exception ex) {
+//                    }
+//                }
+//
+//            } catch (Exception e) {
+//
+//            }
+//            return null;
+//        }
+//        @Override
+//        protected void onCancelled() {
+//            //mProgressHUD.dismiss();
+//            mProgressHUD.dismiss();
+//        }
+//
+//        @Override
+//        public void onCancel(DialogInterface dialog) {
+//            // TODO Auto-generated method stub
+//
+//        }
+//
+///*		@Override
+//		public void onCancel(DialogInterface dialog) {
+//			// TODO Auto-generated method stub
+//
+//		}*/
+//
+//    }
 
 //*******************************Check Valid User Web Service*********ends here**************************
 
@@ -1950,6 +2095,8 @@ public class ChangePackage_NewActivity extends Activity{
 
         Utils.log("Compulsory Immediate",":"+compulsory_immediate);
         if(compulsory_immediate){
+            Log.e("isRestricted","--"+isVaildUser);
+
             Intent i = null;
             if(Utils.is_CCAvenue)
                 i = new Intent(ChangePackage_NewActivity.this,MakeMyPayments_CCAvenue.class);
@@ -1965,6 +2112,7 @@ public class ChangePackage_NewActivity extends Activity{
             i.putExtra("ClassName", ChangePackage_NewActivity.this.getClass().getSimpleName());
             i.putExtra("addtional_amount", additionalAmount);
             i.putExtra("packageid",PackageId);
+            i.putExtra(Utils.AreaRestricted,isVaildUser);
             startActivity(i);
             BaseApplication.getEventBus().post(new FinishEvent("RenewPackage"));
         }
@@ -1994,6 +2142,7 @@ public class ChangePackage_NewActivity extends Activity{
                 i.putExtra("ClassName", ChangePackage_NewActivity.this.getClass().getSimpleName());
                 i.putExtra("addtional_amount", additionalAmount);
                 i.putExtra("PackageId",PackageId);
+                i.putExtra(Utils.AreaRestricted,isVaildUser);
 
                 startActivity(i);
                 BaseApplication.getEventBus().post(new FinishEvent("RenewPackage"));
@@ -2023,6 +2172,7 @@ public class ChangePackage_NewActivity extends Activity{
         else if(CCAvenue>0){
             Utils.is_CCAvenue=true;
             Utils.is_ebs=false;
+
             proceed_to_pay();
         }
         else{

@@ -1,7 +1,9 @@
 package com.cnergee.mypage.caller;
 
 import com.cnergee.mypage.Authentication;
+import com.cnergee.mypage.ChangePackage_NewActivity;
 import com.cnergee.mypage.SOAP.AuthenticationSOAP;
+import com.cnergee.mypage.utils.Utils;
 
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -34,8 +36,13 @@ public AuthenticationSOAP authentication;
 		
 		try {
 			authentication = new AuthenticationSOAP(WSDL_TARGET_NAMESPACE, SOAP_URL, METHOD_NAME);
-			Authentication.rslt = authentication.CallAuthenticationSOAP(mobilenumber,userid);
-			Authentication.isVaildUser = authentication.isValidUser();
+			if (Utils.areaRestrict == 1) {
+				Authentication.rslt = authentication.CallAuthenticationSOAP(mobilenumber, userid);
+				Authentication.isVaildUser = authentication.isValidUser();
+			}else if (Utils.areaRestrict == 2) {
+				ChangePackage_NewActivity.rslt = authentication.CallAuthenticationSOAP(mobilenumber, userid);
+				ChangePackage_NewActivity.isVaildUser = authentication.isValidUser();
+			}
 			/*if(authentication.isValidUser())
 			{
 			 	Authentication.mobilenumber = authentication.getMobilenumber();

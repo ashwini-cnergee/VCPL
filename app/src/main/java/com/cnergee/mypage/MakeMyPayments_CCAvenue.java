@@ -42,9 +42,11 @@ import com.citruspay.citruspaylib.model.ExtraParams;
 import com.citruspay.citruspaylib.service.CitrusGetWebClientJSResponse;
 import com.citruspay.citruspaylib.utils.CitrusParams;
 import com.citruspay.citruspaylib.utils.Constants;
+import com.cnergee.fragments.NewConnFragment;
 import com.cnergee.myapp.instanet.R;
 import com.cnergee.mypage.SOAP.GetPhoneDetailsSOAP;
 import com.cnergee.mypage.SOAP.Get_CCAvenue_SignatureSOAP;
+import com.cnergee.mypage.SOAP.PAckageDetailSOAP;
 import com.cnergee.mypage.caller.AfterInsertPaymentsCaller;
 import com.cnergee.mypage.caller.BeforePaymentInsertCaller;
 import com.cnergee.mypage.caller.CitrusConstantCaller;
@@ -58,6 +60,7 @@ import com.cnergee.mypage.obj.AdditionalAmount;
 import com.cnergee.mypage.obj.AuthenticationMobile;
 import com.cnergee.mypage.obj.CitrusConstantsObj;
 import com.cnergee.mypage.obj.MemberDetailsObj;
+import com.cnergee.mypage.obj.PackageDetails;
 import com.cnergee.mypage.obj.PaymentGatewayObj;
 import com.cnergee.mypage.obj.PaymentsObj;
 import com.cnergee.mypage.obj.RedirectionDetailObj;
@@ -136,7 +139,7 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 			LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 
 	String GetSignature;
-	private boolean isDataReceived;
+	private boolean isDataReceived,isareaRestricted;
 	private LinearLayout responseLayout;
 	private ScrollView payNowView, responseScrollLayout;
 	private InsertBeforePayemnt InsertBeforePayemnt = null;
@@ -159,6 +162,7 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 	MemberDetailsObj memberDetails;
 	public boolean is_member_details=false,is_activity_running=false,trackid_check=false;;
 	Bundle bundle;
+	public static Map<String, PackageDetails> mapPackageDetails;
 
 
 	String cca_access_code="",cca_merchant_id="",cca_enc_req="",cca_working_key="",cca_request="";
@@ -205,9 +209,11 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 		discount = bundle.getString("discount");
 		ClassName = bundle.getString("ClassName");
 		additionalAmount = (AdditionalAmount) bundle.getSerializable("addtional_amount");
+		isareaRestricted = bundle.getBoolean(Utils.AreaRestricted);
 		PackageId = bundle.getString("PackageId");
-//        changeTheContentView();
 		Utils.log("UpdateFrom", "is:" + UpdateFrom);
+//        changeTheContentView();
+		Utils.log("isareaRestricted", "is:" + isareaRestricted);
 		trackid_check=false;
 		is_member_details=false;
 
@@ -303,7 +309,7 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 
 		memberid = Long.parseLong(utils.getMemberId());
 		isRenew = sharedPreferences.getString(Utils.IS_RENEWAL,"0");
-
+		Log.e("SubscriberId",":-"+utils.getMemberLoginID());
 			/*if(Utils.isOnline(MakeMyPayments_CCAvenue.this)){
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 				getMemberDetailWebService = new GetMemberDetailWebService();
@@ -333,10 +339,15 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 //					if(is_activity_running)
 //					AlertsBoxFactory.showAlert("Please connect to internet !!", MakeMyPayments_CCAvenue.this);
 //				}
+
 		payNowView.setVisibility(View.VISIBLE);
 		responseScrollLayout.setVisibility(View.GONE);
 
 
+//		if (isareaRestricted)
+//		{
+//			btnnb.setEnabled(false);
+//		}
         if (Utils.isOnline(MakeMyPayments_CCAvenue.this)) {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -372,13 +383,13 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 								TrackId = "";
 								if(Utils.isOnline(MakeMyPayments_CCAvenue.this)){
 									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-										insertBeforeWithTrackId = new InsertBeforeWithTrackId();
-										insertBeforeWithTrackId.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (String) null);
+										getMemberDetailWebService = new GetMemberDetailWebService();
+										getMemberDetailWebService.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (String) null);
 
 									} else {
 
-										insertBeforeWithTrackId = new InsertBeforeWithTrackId();
-										insertBeforeWithTrackId.execute((String) null);
+										getMemberDetailWebService = new GetMemberDetailWebService();
+										getMemberDetailWebService.execute((String) null);
 									}
 								}
 
@@ -499,6 +510,202 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 		is_activity_running=false;
 	}
 
+	private class GetMemberDetailWebService extends
+			AsyncTask<String, Void, Void> implements OnCancelListener {
+		//private ProgressDialog Dialog = new ProgressDialog(IONHome.this);
+		ProgressHUD mProgressHUD;
+		protected void onPreExecute() {
+			if (is_activity_running) {
+					mProgressHUD = ProgressHUD.show(MakeMyPayments_CCAvenue.this, getString(R.string.app_please_wait_label), true, true, this);
+			}
+		}
+
+		protected void onPostExecute(Void unused) {
+			getMemberDetailWebService = null;
+			if (is_activity_running) {
+
+					mProgressHUD.dismiss();
+			}
+
+			try {
+				if (rslt.trim().equalsIgnoreCase("ok")) {
+					if (mapPackageDetails != null) {
+
+						Set<String> keys = mapPackageDetails.keySet();
+						String str_keyVal = "";
+
+						for (Iterator<String> i = keys.iterator(); i.hasNext(); ) {
+							str_keyVal = (String) i.next();
+
+						}
+						String selItem = str_keyVal.trim();
+						isLogout = false;
+						// finish();
+
+
+						PackageDetails packageDetails = mapPackageDetails
+								.get(selItem);
+
+						Log.e("CCAvenue",":"+packageDetails.getIsCC_Avenue());
+	        			if(packageDetails.getIsCC_Avenue()== 0)
+						{
+							AlertsBoxFactory.showAlert("Please contact your ISP.", MakeMyPayments_CCAvenue.this);
+						}
+						else {
+
+
+							if(Utils.isOnline(MakeMyPayments_CCAvenue.this)){
+								TrackId = "";
+								if(Utils.isOnline(MakeMyPayments_CCAvenue.this)){
+									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+										insertBeforeWithTrackId = new InsertBeforeWithTrackId();
+										insertBeforeWithTrackId.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (String) null);
+
+									} else {
+
+										insertBeforeWithTrackId = new InsertBeforeWithTrackId();
+										insertBeforeWithTrackId.execute((String) null);
+									}
+								}
+
+							}
+							else{
+								Toast.makeText(MakeMyPayments_CCAvenue.this,
+										getString(R.string.app_please_wait_label),
+										Toast.LENGTH_LONG).show();
+
+
+							}
+
+
+						}
+
+						/* if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+							 new GetCalciVersion().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR );
+						    else
+						    new GetCalciVersion().execute();*/
+
+					}
+				} else {
+					if (is_activity_running) {
+					/*if(show_progress)
+					//AlertsBoxFactory.showAlert(rslt, context);
+*/
+					}
+//                    setOfflineRenewalData();
+				}
+
+			} catch (Exception e) {
+				if (is_activity_running) {
+
+						AlertsBoxFactory.showAlert(rslt, context);
+				}
+//                setOfflineRenewalData();
+			}
+
+
+			SharedPreferences sharedPreferences_ = getApplicationContext()
+					.getSharedPreferences(getString(R.string.shared_preferences_name), 0); // 0 - for private mode
+			if (sharedPreferences_.getString("Gcm_reg_id", "").length() > 0) {
+				Utils.log("Reg id", "is:" + sharedPreferences_.getString("Gcm_reg_id", ""));
+
+			} else {
+				Utils.getRegId(MakeMyPayments_CCAvenue.this);
+			}
+			/*
+			 * Intent intentService1 = new
+			 * Intent(IONHome.this,ExpiryBroadcastReceiver.class);
+			 *
+			 * SharedPreferences sharedPreferences = getApplicationContext()
+			 * .getSharedPreferences(sharedPreferences_name, 0); // 0 - for
+			 * private mode
+			 *
+			 * PendingIntent pintent2 = PendingIntent.getBroadcast(context, 0,
+			 * intentService1, 0); AlarmManager alarm2 =
+			 * (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+			 *
+			 * int INTERVAL_DAY1 = 24 * 60 * 60 * 1000; Calendar calendar1 = new
+			 * GregorianCalendar(); calendar1.set(Calendar.HOUR_OF_DAY, 8);
+			 * calendar1.set(Calendar.MINUTE, 05);
+			 * calendar1.set(Calendar.SECOND, 0);
+			 * calendar1.set(Calendar.MILLISECOND, 0);
+			 *
+			 * long triggerMillis = calendar1.getTimeInMillis();
+			 *
+			 *
+			 * if (calendar1.getTimeInMillis() < Calendar.getInstance()
+			 * .getTimeInMillis()) { triggerMillis = calendar1.getTimeInMillis()
+			 * + INTERVAL_DAY1;
+			 * System.out.println("Alarm will go off next day"); }
+			 *
+			 * alarm2.cancel(pintent2);
+			 * if(sharedPreferences.getBoolean("check_expiry", true)) {
+			 * alarm2.setRepeating(AlarmManager.RTC_WAKEUP,
+			 * calendar1.getTimeInMillis(), AlarmManager.INTERVAL_DAY,
+			 * pintent2); } else {
+			 *
+			 * alarm2.setRepeating(AlarmManager.RTC_WAKEUP, triggerMillis,
+			 * AlarmManager.INTERVAL_DAY, pintent2); }
+			 */
+		}
+
+		@Override
+		protected Void doInBackground(String... params) {
+			try {
+				/*PackageDetailCaller packagedetailCaller = new PackageDetailCaller(
+						getApplicationContext().getResources().getString(
+								R.string.WSDL_TARGET_NAMESPACE),
+						getApplicationContext().getResources().getString(
+								R.string.SOAP_URL), getApplicationContext()
+								.getResources().getString(
+										R.string.METHOD_PACKAGE_DETAILS));
+
+				packagedetailCaller.memberloginid = memberloginid;
+
+				packagedetailCaller.join();
+				packagedetailCaller.start();*/
+
+				PAckageDetailSOAP packageDetailSOAP = new PAckageDetailSOAP(
+						getApplicationContext().getResources().getString(
+								R.string.WSDL_TARGET_NAMESPACE),
+						getApplicationContext().getResources().getString(
+								R.string.SOAP_URL), getApplicationContext()
+						.getResources().getString(
+								R.string.METHOD_PACKAGE_DETAILS));
+
+				MakeMyPayments_CCAvenue.rslt = packageDetailSOAP.CallSearchMemberSOAP(utils.getMemberLoginID());
+				MakeMyPayments_CCAvenue.mapPackageDetails = packageDetailSOAP.getMapPackageDetails();
+
+				//rslt = "START";
+
+			/*	while (rslt == "START") {
+					try {
+						Thread.sleep(10);
+					} catch (Exception ex) {
+					}
+				}*/
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+
+		@Override
+		protected void onCancelled() {
+
+				mProgressHUD.dismiss();
+			getMemberDetailWebService = null;
+		}
+
+		/* (non-Javadoc)
+		 * @see android.content.DialogInterface.OnCancelListener#onCancel(android.content.DialogInterface)
+		 */
+		@Override
+		public void onCancel(DialogInterface dialog) {
+			// TODO Auto-generated method stub
+
+		}
+	}
 
 
 	private class GetSignatureFromMerchantServer extends
@@ -765,122 +972,122 @@ public class MakeMyPayments_CCAvenue extends BaseActivity implements OnCancelLis
 			responseLayout.addView(textView);
 	}
 
-	private class GetMemberDetailWebService extends
-			AsyncTask<String, Void, Void> implements OnCancelListener {
-
-		ProgressHUD mProgressHUD;
-
-		protected void onPreExecute() {
-			if(is_activity_running)
-				mProgressHUD = ProgressHUD
-						.show(MakeMyPayments_CCAvenue.this,
-								getString(R.string.app_please_wait_label), true,
-								true, this);
-			Utils.log("2 Progress", "start");
-		}
-
-		protected void onPostExecute(Void unused) {
-			getMemberDetailWebService = null;
-			if(is_activity_running)
-				mProgressHUD.dismiss();
-			Utils.log("2 Progress", "end");
-
-			// Log.i(">>>>.MemberDetails<<<<<<", mapMemberDetails.toString());
-			try {
-				if (rslt.trim().equalsIgnoreCase("ok")) {
-					if (mapMemberDetails != null) {
-
-						Set<String> keys = mapMemberDetails.keySet();
-						String str_keyVal = "";
-
-						for (Iterator<String> i = keys.iterator(); i.hasNext();) {
-							str_keyVal = (String) i.next();
-
-						}
-						String selItem = str_keyVal.trim();
-						isLogout = false;
-						// finish();
-						memberDetails = mapMemberDetails
-								.get(selItem);
-						txtloginid.setText(memberDetails.getMemberLoginId());
-						txtemailid.setText(memberDetails.getEmailId());
-						txtcontactno.setText(memberDetails.getMobileNo());
-						// address = memberDetails.getInstLocAddressLine1() +
-						// " " + memberDetails.getInstLocAddressLine2();
-						customername = memberDetails.getMemberName();
-
-
-
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-							getpaymentgatewaysdetails = new PaymentGateWayDetails();
-							getpaymentgatewaysdetails.executeOnExecutor(
-									AsyncTask.THREAD_POOL_EXECUTOR, (String) null);
-
-						} else {
-							getpaymentgatewaysdetails = new PaymentGateWayDetails();
-							getpaymentgatewaysdetails.execute((String) null);
-						}
-
-					}
-				} else if (rslt.trim().equalsIgnoreCase("not")) {
-					if(is_activity_running)
-						AlertsBoxFactory.showAlert("Subscriber Not Found !!! ",
-								context);
-				} else {
-					if(is_activity_running)
-						AlertsBoxFactory.showAlert(rslt, context);
-				}
-			} catch (Exception e) {
-				if(is_activity_running)
-					AlertsBoxFactory.showAlert(rslt, context);
-			}
-		}
-
-		@Override
-		protected Void doInBackground(String... params) {
-			try {
-				MemberDetailCaller memberdetailCaller = new MemberDetailCaller(
-						getApplicationContext().getResources().getString(
-								R.string.WSDL_TARGET_NAMESPACE),
-						getApplicationContext().getResources().getString(
-								R.string.SOAP_URL), getApplicationContext()
-						.getResources().getString(
-								R.string.METHOD_SUBSCRIBER_DETAILS));
-
-				memberdetailCaller.memberid = memberid;
-
-				memberdetailCaller.setAllData(false);
-				memberdetailCaller.setTopup_flag(false);
-				memberdetailCaller.join();
-				memberdetailCaller.start();
-				rslt = "START";
-
-				while (rslt == "START") {
-					try {
-						Thread.sleep(10);
-					} catch (Exception ex) {
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return null;
-		}
-
-		@Override
-		protected void onCancelled() {
-			if(is_activity_running)
-				mProgressHUD.dismiss();
-			getMemberDetailWebService = null;
-		}
-
-		@Override
-		public void onCancel(DialogInterface dialog) {
-			// TODO Auto-generated method stub
-			if(is_activity_running)
-				mProgressHUD.dismiss();
-		}
-	}
+//	private class GetMemberDetailWebService extends
+//			AsyncTask<String, Void, Void> implements OnCancelListener {
+//
+//		ProgressHUD mProgressHUD;
+//
+//		protected void onPreExecute() {
+//			if(is_activity_running)
+//				mProgressHUD = ProgressHUD
+//						.show(MakeMyPayments_CCAvenue.this,
+//								getString(R.string.app_please_wait_label), true,
+//								true, this);
+//			Utils.log("2 Progress", "start");
+//		}
+//
+//		protected void onPostExecute(Void unused) {
+//			getMemberDetailWebService = null;
+//			if(is_activity_running)
+//				mProgressHUD.dismiss();
+//			Utils.log("2 Progress", "end");
+//
+//			// Log.i(">>>>.MemberDetails<<<<<<", mapMemberDetails.toString());
+//			try {
+//				if (rslt.trim().equalsIgnoreCase("ok")) {
+//					if (mapMemberDetails != null) {
+//
+//						Set<String> keys = mapMemberDetails.keySet();
+//						String str_keyVal = "";
+//
+//						for (Iterator<String> i = keys.iterator(); i.hasNext();) {
+//							str_keyVal = (String) i.next();
+//
+//						}
+//						String selItem = str_keyVal.trim();
+//						isLogout = false;
+//						// finish();
+//						memberDetails = mapMemberDetails
+//								.get(selItem);
+//						txtloginid.setText(memberDetails.getMemberLoginId());
+//						txtemailid.setText(memberDetails.getEmailId());
+//						txtcontactno.setText(memberDetails.getMobileNo());
+//						// address = memberDetails.getInstLocAddressLine1() +
+//						// " " + memberDetails.getInstLocAddressLine2();
+//						customername = memberDetails.getMemberName();
+//
+//
+//
+//						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+//							getpaymentgatewaysdetails = new PaymentGateWayDetails();
+//							getpaymentgatewaysdetails.executeOnExecutor(
+//									AsyncTask.THREAD_POOL_EXECUTOR, (String) null);
+//
+//						} else {
+//							getpaymentgatewaysdetails = new PaymentGateWayDetails();
+//							getpaymentgatewaysdetails.execute((String) null);
+//						}
+//
+//					}
+//				} else if (rslt.trim().equalsIgnoreCase("not")) {
+//					if(is_activity_running)
+//						AlertsBoxFactory.showAlert("Subscriber Not Found !!! ",
+//								context);
+//				} else {
+//					if(is_activity_running)
+//						AlertsBoxFactory.showAlert(rslt, context);
+//				}
+//			} catch (Exception e) {
+//				if(is_activity_running)
+//					AlertsBoxFactory.showAlert(rslt, context);
+//			}
+//		}
+//
+//		@Override
+//		protected Void doInBackground(String... params) {
+//			try {
+//				MemberDetailCaller memberdetailCaller = new MemberDetailCaller(
+//						getApplicationContext().getResources().getString(
+//								R.string.WSDL_TARGET_NAMESPACE),
+//						getApplicationContext().getResources().getString(
+//								R.string.SOAP_URL), getApplicationContext()
+//						.getResources().getString(
+//								R.string.METHOD_SUBSCRIBER_DETAILS));
+//
+//				memberdetailCaller.memberid = memberid;
+//
+//				memberdetailCaller.setAllData(false);
+//				memberdetailCaller.setTopup_flag(false);
+//				memberdetailCaller.join();
+//				memberdetailCaller.start();
+//				rslt = "START";
+//
+//				while (rslt == "START") {
+//					try {
+//						Thread.sleep(10);
+//					} catch (Exception ex) {
+//					}
+//				}
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//			return null;
+//		}
+//
+//		@Override
+//		protected void onCancelled() {
+//			if(is_activity_running)
+//				mProgressHUD.dismiss();
+//			getMemberDetailWebService = null;
+//		}
+//
+//		@Override
+//		public void onCancel(DialogInterface dialog) {
+//			// TODO Auto-generated method stub
+//			if(is_activity_running)
+//				mProgressHUD.dismiss();
+//		}
+//	}
 
 	private class PaymentGateWayDetails extends AsyncTask<String, Void, Void>
 			implements OnCancelListener {

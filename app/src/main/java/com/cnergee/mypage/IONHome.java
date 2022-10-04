@@ -867,6 +867,7 @@ public class IONHome extends Activity implements OnClickListener {
                         editor.putBoolean("is_24ol", packageDetails.isIs_24ol());
                         editor.putString("ConnectionTypeId", packageDetails.getConnectionTypeId());
                         editor.putInt("CCAvenue", packageDetails.getIsCC_Avenue());
+                        editor.putString(Utils.PhoneNum, packageDetails.getPhoneNum());
                         editor.putInt("EBS", packageDetails.getIsEbs());
                         Utils.log("Atom", ""+packageDetails.getIsAtom());
                         editor.putInt("PAYTM",packageDetails.getIs_PayTm());

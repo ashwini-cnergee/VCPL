@@ -18,7 +18,7 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
 		// TODO Auto-generated method stub
 		Utils.log("Boot Broadcast ","called");
 		Intent intentService1 = new Intent(context,AlarmBroadcastReceiver.class);
-		PendingIntent pintent1 = PendingIntent.getBroadcast(context, 0, intentService1, 0);
+		PendingIntent pintent1 = PendingIntent.getBroadcast(context, 0, intentService1, PendingIntent.FLAG_IMMUTABLE);
 		Calendar cal = Calendar.getInstance();
 		AlarmManager alarm1 = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
 		// Start every 30 seconds
@@ -30,7 +30,7 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
 		Intent intentService2 = new Intent(context,ExpiryBroadcastReceiver.class);
 		
 		
-		PendingIntent pintent2 = PendingIntent.getBroadcast(context, 0, intentService2, 0);
+		PendingIntent pintent2 = PendingIntent.getBroadcast(context, 0, intentService2, PendingIntent.FLAG_IMMUTABLE);
 		/*Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.HOUR_OF_DAY, 8);
 		calendar.set(Calendar.MINUTE, 05);

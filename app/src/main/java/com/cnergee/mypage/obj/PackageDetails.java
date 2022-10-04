@@ -25,6 +25,7 @@ public class PackageDetails {
 	private int isAtom;
 	private int isEbs;
 	private int is_PayTm=0;
+	private String PhoneNum;
 
 
     private int is_PayU =0;
@@ -230,4 +231,11 @@ public class PackageDetails {
         this.is_PayU = is_PayU;
     }
 
+	public String getPhoneNum() {
+		return PhoneNum;
+	}
+
+	public void setPhoneNum(String phoneNum) {
+		PhoneNum = phoneNum;
+	}
 }
